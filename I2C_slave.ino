@@ -1,15 +1,6 @@
-// Simple I2C master and slave demo - Earle F. Philhower, III
-// Released into the public domain
-// 
-// Using both onboard I2C interfaces, have one master and one slave
-// and send data both ways between them
-//
-// To run, connect GPIO0 to GPIO2, GPIO1 to GPIO3 on a single Pico
-
-
 #include <Wire.h>
 
-
+byte slaveaddress = 0x30;
 void setup() {
     Serial.begin(115200);
     delay(5000);
@@ -18,18 +9,23 @@ void setup() {
     //Set pins before Wire.begin()
     if(!Wire.setSCL(9)){
       Serial.println("setscl error");
+      while(1);
     }
     if(!Wire.setSDA(8)){
       Serial.println("setsda error");
+      while(1);
     }
-    Wire.begin(0x30); //begins as a slave on address 0x30
+    Wire.begin(slaveaddress); //begins as a slave on address 0x30
     Wire.onReceive(recv);
     Wire.onRequest(req);
 }
 
 static char buff[100];
 void loop() {
-  Serial.println("im alive");
+  Serial.print("im alive on address 0x");
+  if (slaveaddress<16)
+        Serial.print("0");
+  Serial.println(slaveaddress, HEX);
   delay(1000);
 }
 
