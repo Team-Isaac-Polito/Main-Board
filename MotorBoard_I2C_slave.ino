@@ -1,7 +1,5 @@
 /*
-  I2C Slave Demo
-  i2c-slave-demo.ino
-  Demonstrate use of I2C bus
+  I2C Slave Demo for MotorBoard
   Slave receives character from Master and responds
   DroneBot Workshop 2019
   https://dronebotworkshop.com
@@ -20,6 +18,7 @@
 String answer = "Hello";
 
 void setup() {
+  //I2C Pins going to the MotorBoard
   Wire.setSDA(8);
   Wire.setSCL(9);
   // Initialize I2C communications as Slave
