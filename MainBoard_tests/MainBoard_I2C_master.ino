@@ -1,7 +1,5 @@
 /*
-  I2C Master Demo
-  i2c-master-demo.ino
-  Demonstrate use of I2C bus
+  I2C Master Demo for MainBoard
   Master sends character and gets reply from Slave
   DroneBot Workshop 2019
   https://dronebotworkshop.com
@@ -18,7 +16,7 @@
 
 void setup() {
 
-
+  // Pins connected to MotorBoard (I2C0)
   // Initialize I2C communications as Master
   Wire.begin(17,18,100000);
   
