@@ -44,36 +44,35 @@ void setup() {
   Serial.println("Ready!");
 }
 
+int scale(int m) {
+  return (m+55)*(254)/110 - 127; // -127,127
+  //return (m+55)*(510)/110 - 255; // -255,255
+  //return (m+55)*(2048)/110 - 1024; // -1024,1024
+}
+
 void loop() {
   // CAN read message
   if (CAN0.read(CanMsg)) {
     Serial.println("ESP32 received message");
-    //printFrame(&CanMsg);
+    printFrame(&CanMsg);
 
-    if (CanMsg.id == 0x21) {
+    if ((CanMsg.id & 0x00FF0000)>>16 == 0x21) {
        Serial.println("MOVEMENT MESSAGE");
 
       // take the first four bytes from the array and and put them in a float
-      memcpy(&leftSpeed, &CanMsg.data, 4);
-      memcpy(&rightSpeed, &CanMsg.data + 4, 4);
+      memcpy(&leftSpeed, &(CanMsg.data), 4);
+      memcpy(&rightSpeed, &(CanMsg.data), 4);
       // motorTrLeft.setSpeed(leftSpeed);
       // motorTrRight.setSpeed(rightSpeed);
 
       //I2C Send data to motors
-      uint8_t uleft = leftSpeed;
+      int left = scale((int)leftSpeed);
+      int right = scale((int)rightSpeed);
       Wire.beginTransmission(SLAVE_ADDR);
-      Wire.write(uleft);
+      Wire.write(left);
+      Wire.write(right);
       byte error = Wire.endTransmission();
-      Serial.print("Error: ");
-      Serial.println(error);
-      Serial.println("Receive data");
-
-      //I2C Send data to motors
-      uint8_t uright = rightSpeed;
-      Wire.beginTransmission(SLAVE_ADDR);
-      Wire.write(uright);
-      error = Wire.endTransmission();
-      Serial.print("Error: ");
+      Serial.print("Result: ");
       Serial.println(error);
       Serial.println("Receive data");
 
