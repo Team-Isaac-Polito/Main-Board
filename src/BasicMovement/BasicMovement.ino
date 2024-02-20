@@ -6,7 +6,7 @@
 CAN_FRAME CanMsg;
 
 float leftSpeed, rightSpeed;
-int l = 20, r = 10;
+int speeds[] = {-200, 200};
 
 // print CAN frame
 void printFrame(CAN_FRAME *message)
@@ -95,20 +95,34 @@ void loop()
   }
 
  */
-  
+
   // Test I2C only
-  l++;
-  r++;
+  speeds[0]++; //Random values to test signed integers
+  speeds[1]--;
   Wire.beginTransmission(SLAVE_ADDR);
   Serial.print("Sending values: ");
-  Serial.print(l);
+  Serial.print(speeds[0]);
   Serial.print(" ");
-  Serial.println(r);
-  Wire.write(l);
-  Wire.write(r);
+  Serial.println(speeds[1]);
+
+  //Write 4 bytes
+  for (int i = 0; i < 2; i++) //for some reason sizeof(speeds) is 8 ??
+  {
+    if (speeds[i] < 0)
+    {
+      Wire.write(1);
+      Wire.write(speeds[i]); //Wire.write() will always send a single byte (uint8_t)
+    }
+    else
+    {
+      Wire.write(0);
+      Wire.write(speeds[i]);
+    }
+  }
+
   byte ecode = Wire.endTransmission();
   Serial.print("I2C exit code: ");
   Serial.println(ecode);
 
-  delay(500);
+  delay(100);
 }
