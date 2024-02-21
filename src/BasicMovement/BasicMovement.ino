@@ -6,7 +6,7 @@
 CAN_FRAME CanMsg;
 
 float leftSpeed, rightSpeed;
-int speeds[] = {-200, 200};
+short int speeds[] = {-200, 200};
 
 // print CAN frame
 void printFrame(CAN_FRAME *message)
@@ -58,6 +58,45 @@ int scale(int m)
   // return (m+55)*(2048)/110 - 1024; // -1024,1024
 }
 
+// short int is 16bits or 2bytes, enough to represent -1024,1024
+void sendIntI2C(short int value)
+{
+  unsigned char *ptr = (unsigned char *)&value;
+
+  Wire.write(*(ptr + 1)); //Send MSB first so they can be shifted left
+  Wire.write(*(ptr + 0));
+
+}
+
+void printI2C_ecode(byte exitcode)
+{
+  Serial.print("I2C exit code: ");
+  switch (exitcode)
+  {
+  case 0:
+    Serial.println("success");
+    break;
+  case 1:
+    Serial.println("data too long to fit in transmit buffer");
+    break;
+  case 2:
+    Serial.println("received NACK on transmit of address.");
+    break;
+  case 3:
+    Serial.println("received NACK on transmit of data.");
+    break;
+  case 4:
+    Serial.println("other error.");
+    break;
+  case 5:
+    Serial.println("timeout");
+    break;
+  default:
+    Serial.println("unexpected error");
+    break;
+  }
+}
+
 void loop()
 {
   // CAN read message
@@ -97,32 +136,41 @@ void loop()
  */
 
   // Test I2C only
-  speeds[0]++; //Random values to test signed integers
+  speeds[0]++; // Values to test signed integers
   speeds[1]--;
-  Wire.beginTransmission(SLAVE_ADDR);
+  
   Serial.print("Sending values: ");
   Serial.print(speeds[0]);
   Serial.print(" ");
   Serial.println(speeds[1]);
 
-  //Write 4 bytes
-  for (int i = 0; i < 2; i++) //for some reason sizeof(speeds) is 8 ??
-  {
-    if (speeds[i] < 0)
-    {
-      Wire.write(1);
-      Wire.write(speeds[i]); //Wire.write() will always send a single byte (uint8_t)
-    }
-    else
-    {
-      Wire.write(0);
-      Wire.write(speeds[i]);
-    }
-  }
+  Wire.beginTransmission(SLAVE_ADDR);
+  // Wire.write(speeds[0]);
+  // Wire.write(speeds[1]);
+  sendIntI2C(speeds[0]);
+  sendIntI2C(speeds[1]);
+  printI2C_ecode(Wire.endTransmission());
 
-  byte ecode = Wire.endTransmission();
-  Serial.print("I2C exit code: ");
-  Serial.println(ecode);
+
+  // // Write 4 bytes
+  // Wire.beginTransmission(SLAVE_ADDR);
+  // for (int i = 0; i < 2; i++) // for some reason sizeof(speeds) is 8 ??
+  // {
+  //   if (speeds[i] < 0)
+  //   {
+  //     Wire.write(1);
+  //     Wire.write(speeds[i]); // Wire.write() will always send a single byte (uint8_t)
+  //   }
+  //   else
+  //   {
+  //     Wire.write(0);
+  //     Wire.write(speeds[i]);
+  //   }
+  // }
+
+  // byte ecode = Wire.endTransmission();
+  // Serial.print("I2C exit code: ");
+  // Serial.println(ecode);
 
   delay(100);
 }
