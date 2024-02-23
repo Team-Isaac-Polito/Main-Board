@@ -108,31 +108,43 @@ void loop()
     if ((CanMsg.id & 0x00FF0000) >> 16 == 0x21)
     {
       // Serial.println("MOVEMENT MESSAGE");
+      for (int i = 0; i < CanMsg.length; i++)
+      {
+        Serial.print("debug ");
+        Serial.print(i);
+        Serial.print(": ");
+        Serial.println(CanMsg.data.byte[i]);
+      }
 
       // take the first four bytes from the array and and put them in a float
-      // memcpy(&leftSpeed, &(CanMsg.data), 4);
-      // memcpy(&rightSpeed, &(CanMsg.data), 4);
-      uint32_t l, r;
-      if (CanMsg.length == 8)
-      {
-        for (int i = 0; i < CanMsg.length; i++)
-        {
-          if (i < 4)
-          {
-            l = (l << 8) | CanMsg.data.byte[i];
-          }
-          else if (i >= 4)
-          {
-            r = (r << 8) | CanMsg.data.byte[i];
-          }else{
-            Serial.println("Something's wrong");
-          }
-        }
-        leftSpeed = l;
-        rightSpeed = r;
-      }else{
-        Serial.println("Unexpected length of message ");
-      }
+      memcpy(&leftSpeed, &(CanMsg.data), 4);
+      memcpy(&rightSpeed, &(CanMsg.data.byte[4]) , 4);
+
+      // uint32_t l, r;
+      // if (CanMsg.length == 8)
+      // {
+      //   for (int i = 0; i < CanMsg.length; i++)
+      //   {
+      //     Serial.print("debug ");
+      //     Serial.print(i);
+      //     Serial.print(": ");
+      //     Serial.println(CanMsg.data.byte[i]);
+      //     if (i < 4)
+      //     {
+      //       l = (l << 8) | CanMsg.data.byte[i];
+      //     }
+      //     else if (i >= 4)
+      //     {
+      //       r = (r << 8) | CanMsg.data.byte[i];
+      //     }else{
+      //       Serial.println("Something's wrong");
+      //     }
+      //   }
+      //   leftSpeed = l;
+      //   rightSpeed = r;
+      // }else{
+      //   Serial.println("Unexpected length of message ");
+      // }
 
       // uint32_t buff{0};
       // memcpy(&buff, &(CanMsg.data), 8);
@@ -194,5 +206,5 @@ void loop()
   // Serial.print("I2C exit code: ");
   // Serial.println(ecode);
 
-  delay(50);
+  delay(5);
 }
