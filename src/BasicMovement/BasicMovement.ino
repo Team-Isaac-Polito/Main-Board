@@ -6,7 +6,7 @@
 CAN_FRAME CanMsg;
 
 float leftSpeed, rightSpeed;
-short int speeds[] = {-200, 200};
+// short int speeds[] = {-200, 200};
 
 // print CAN frame
 void printFrame(CAN_FRAME *message)
@@ -21,6 +21,7 @@ void printFrame(CAN_FRAME *message)
     Serial.print(" S ");
   }
   Serial.print(message->length, DEC);
+  Serial.print(" ");
   for (int i = 0; i < message->length; i++)
   {
     Serial.print(message->data.byte[i], HEX);
@@ -51,11 +52,11 @@ void setup()
   Serial.println("Ready!");
 }
 
-int scale(int m)
+short int scale(int m)
 {
-  return (m + 55) * (254) / 110 - 127; // -127,127
+  // return (m + 55) * (254) / 110 - 127; // -127,127
   // return (m+55)*(510)/110 - 255; // -255,255
-  // return (m+55)*(2048)/110 - 1024; // -1024,1024
+  return (m + 55) * (2048) / 110 - 1024; // -1024,1024
 }
 
 // short int is 16bits or 2bytes, enough to represent -1024,1024
@@ -63,9 +64,8 @@ void sendIntI2C(short int value)
 {
   unsigned char *ptr = (unsigned char *)&value;
 
-  Wire.write(*(ptr + 1)); //Send MSB first so they can be shifted left
+  Wire.write(*(ptr + 1)); // Send MSB first so they can be shifted left
   Wire.write(*(ptr + 0));
-
 }
 
 void printI2C_ecode(byte exitcode)
@@ -100,31 +100,54 @@ void printI2C_ecode(byte exitcode)
 void loop()
 {
   // CAN read message
-  /* if (CAN0.read(CanMsg))
+  if (CAN0.read(CanMsg))
   {
-    Serial.println("ESP32 received message");
+    // Serial.println("ESP32 received message");
     printFrame(&CanMsg);
 
     if ((CanMsg.id & 0x00FF0000) >> 16 == 0x21)
     {
-      Serial.println("MOVEMENT MESSAGE");
+      // Serial.println("MOVEMENT MESSAGE");
 
       // take the first four bytes from the array and and put them in a float
-      memcpy(&leftSpeed, &(CanMsg.data), 4);
-      memcpy(&rightSpeed, &(CanMsg.data), 4);
-      // motorTrLeft.setSpeed(leftSpeed);
-      // motorTrRight.setSpeed(rightSpeed);
+      // memcpy(&leftSpeed, &(CanMsg.data), 4);
+      // memcpy(&rightSpeed, &(CanMsg.data), 4);
+      uint32_t l, r;
+      if (CanMsg.length == 8)
+      {
+        for (int i = 0; i < CanMsg.length; i++)
+        {
+          if (i < 4)
+          {
+            l = (l << 8) | CanMsg.data.byte[i];
+          }
+          else if (i >= 4)
+          {
+            r = (r << 8) | CanMsg.data.byte[i];
+          }else{
+            Serial.println("Something's wrong");
+          }
+        }
+        leftSpeed = l;
+        rightSpeed = r;
+      }else{
+        Serial.println("Unexpected length of message ");
+      }
+
+      // uint32_t buff{0};
+      // memcpy(&buff, &(CanMsg.data), 8);
+      // memcpy(&leftSpeed, &buff, 4);
+      // memcpy(&rightSpeed, &buff + 4, 4);
+      // leftSpeed = (buff & 0xFFFF0000) >> 16;
+      // rightSpeed = buff & 0x0000FFFF;
 
       // I2C Send data to motors
-      int left = scale((int)leftSpeed);
-      int right = scale((int)rightSpeed);
+      short int left = scale((int)leftSpeed);
+      short int right = scale((int)rightSpeed);
       Wire.beginTransmission(SLAVE_ADDR);
-      Wire.write(left);
-      Wire.write(right);
-      byte ecode = Wire.endTransmission();
-      Serial.print("I2C exit code: ");
-      Serial.println(ecode);
-      Serial.println("Receive data");
+      sendIntI2C(left);
+      sendIntI2C(right);
+      Wire.endTransmission();
 
       Serial.print("TRACTION DATA :\tleft: \t");
       Serial.print(leftSpeed);
@@ -132,25 +155,24 @@ void loop()
       Serial.println(rightSpeed);
     }
   }
-
- */
+  else
+  {
+    Serial.println("No CAN received");
+  }
 
   // Test I2C only
-  speeds[0]++; // Values to test signed integers
-  speeds[1]--;
-  
-  Serial.print("Sending values: ");
-  Serial.print(speeds[0]);
-  Serial.print(" ");
-  Serial.println(speeds[1]);
+  // speeds[0]++; // Values to test signed integers
+  // speeds[1]--;
 
-  Wire.beginTransmission(SLAVE_ADDR);
-  // Wire.write(speeds[0]);
-  // Wire.write(speeds[1]);
-  sendIntI2C(speeds[0]);
-  sendIntI2C(speeds[1]);
-  printI2C_ecode(Wire.endTransmission());
+  // Serial.print("Sending values: ");
+  // Serial.print(speeds[0]);
+  // Serial.print(" ");
+  // Serial.println(speeds[1]);
 
+  // Wire.beginTransmission(SLAVE_ADDR);
+  // sendIntI2C(speeds[0]);
+  // sendIntI2C(speeds[1]);
+  // printI2C_ecode(Wire.endTransmission());
 
   // // Write 4 bytes
   // Wire.beginTransmission(SLAVE_ADDR);
@@ -172,5 +194,5 @@ void loop()
   // Serial.print("I2C exit code: ");
   // Serial.println(ecode);
 
-  delay(100);
+  delay(50);
 }
