@@ -1,4 +1,4 @@
-#include "main_I2C.h"
+#include "Main_I2C.h"
 
 // Constructor to initialize with TwoWire instance and slave address
 MainI2C::MainI2C(TwoWire& wire, int slaveAddress)
