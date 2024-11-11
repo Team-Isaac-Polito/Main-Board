@@ -1,5 +1,5 @@
-#ifndef MAIN_I2C_H
-#define MAIN_I2C_H
+#ifndef Main_I2C_H
+#define Main_I2C_H
 
 #include <Wire.h>
 
