@@ -1,69 +1,36 @@
 #include <Wire.h>
+#include "main_I2C.h"
 
 #define I2C_SLAVE_ADDRESS 0x08
 #define I2C_SDA_PIN 21
 #define I2C_SCL_PIN 22
 
-// Create a custom I2C instance
-TwoWire I2C_Master = TwoWire(0);  // Use bus 0 for the I2C
+// Create a custom I2C instance and MainI2C object
+TwoWire I2C_Master = TwoWire(0);
+MainI2C mainI2C(I2C_Master, I2C_SLAVE_ADDRESS);
 
-float leftSpeed = 0.5;  // Example speed for left motor
-float rightSpeed = 0.7; // Example speed for right motor
+float leftSpeed = 65.0;  // Set to a higher value for noticeable movement
+float rightSpeed = 65.0;
 
 void setup() {
   Serial.begin(115200);
 
-  // Initialize I2C as master on custom pins
-  I2C_Master.begin(I2C_SDA_PIN, I2C_SCL_PIN, 100000);  // 100kHz clock
+  // Initialize I2C communication
+  mainI2C.begin(I2C_SDA_PIN, I2C_SCL_PIN);
 
   delay(1000);  // Small delay for stability
 
-  // Send motor speed data to the slave
-  sendMotorSpeeds(leftSpeed, rightSpeed);
+  // Send initial motor speeds
+  mainI2C.sendMotorSpeeds(leftSpeed, rightSpeed);
 
-  // Request telemetry data from the slave
-  requestTelemetry();
+  // Request telemetry data
+  float leftTelemetry, rightTelemetry;
+  mainI2C.requestTelemetry(&leftTelemetry, &rightTelemetry);
 }
 
 void loop() {
-  // Add logic to periodically update speeds or request telemetry data
-  delay(2000);  // Request telemetry every 2 seconds for testing
-  requestTelemetry();
-}
-
-// Function to send motor speeds to the slave
-void sendMotorSpeeds(float left, float right) {
-  I2C_Master.beginTransmission(I2C_SLAVE_ADDRESS);
-  
-  // Send two float values for left and right motor speeds
-  I2C_Master.write((byte*)&left, sizeof(float));
-  I2C_Master.write((byte*)&right, sizeof(float));
-
-  I2C_Master.endTransmission();
-
-  Serial.println("Sent motor speeds to slave:");
-  Serial.print("Left motor speed: ");
-  Serial.println(left);
-  Serial.print("Right motor speed: ");
-  Serial.println(right);
-}
-
-// Function to request telemetry from the slave
-void requestTelemetry() {
-  I2C_Master.requestFrom(I2C_SLAVE_ADDRESS, 2 * sizeof(float));
-
-  if (I2C_Master.available() == 2 * sizeof(float)) {
-    float leftSpeedTelemetry, rightSpeedTelemetry;
-    
-    // Read the received telemetry data (two floats)
-    I2C_Master.readBytes((char*)&leftSpeedTelemetry, sizeof(float));
-    I2C_Master.readBytes((char*)&rightSpeedTelemetry, sizeof(float));
-
-    // Print telemetry data
-    Serial.println("Received telemetry data from slave:");
-    Serial.print("Left motor speed: ");
-    Serial.println(leftSpeedTelemetry);
-    Serial.print("Right motor speed: ");
-    Serial.println(rightSpeedTelemetry);
-  }
+  // Periodically request telemetry data from the slave
+  delay(2000);
+  float leftTelemetry, rightTelemetry;
+  mainI2C.requestTelemetry(&leftTelemetry, &rightTelemetry);
 }
