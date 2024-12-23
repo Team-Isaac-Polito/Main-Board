@@ -1,6 +1,9 @@
 #ifndef DynamixelSerial_h
 #define DynamixelSerial_h
 
+// TEST SOLUZIONE 
+//Il pinout dice che il Serial1 TX è il pin numero 4, mentre il pin 
+
 // EEPROM AREA
 #define AX_ID                       3
 #define AX_BAUD_RATE                4
