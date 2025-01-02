@@ -17,11 +17,12 @@ bool DynamixelInterface::waitBytes(int n) {
 }
 
 void DynamixelInterface::writeMode() {
-  gpio_set_function(PIN_SERIAL1_TX, GPIO_FUNC_UART);
+  serialPort->setPins(TX, INPUT);
 }
 
 void DynamixelInterface::readMode() {
-  gpio_set_function(PIN_SERIAL1_TX, GPIO_FUNC_SIO);
+  serialPort->setPins(TX, UART_MODE_RS485_HALF_DUPLEX);
+
 }
 
 void DynamixelInterface::writeBuf(byte id, byte* buf, int len) {
@@ -101,7 +102,7 @@ void DynamixelInterface::setSerial(HardwareSerial *sPort) {
 }
 
 void DynamixelInterface::begin(long baud) {
-  serialPort->begin(baud);
+  serialPort->begin(baud, SERIAL_8N1, TX, TX);
   readMode();
 }
 
